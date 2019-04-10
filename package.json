@@ -1,0 +1,23 @@
+{
+  "name": "objecty",
+  "version": "0.0.1",
+  "description": "Object utils including deep clones, assign, property enumeration, prototype property enumeration, json conversion, deep reference, etc.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "object",
+    "assign",
+    "clone",
+    "enumeration",
+    "properties",
+    "prototypes",
+    "jsonify",
+    "json",
+    "util",
+    "utility"
+  ],
+  "author": "Justin Lacy",
+  "license": "ISC"
+}
