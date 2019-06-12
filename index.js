@@ -1,10 +1,13 @@
+module.exports = {
+	
 /**
- * Create a deep clone of an object.
+ * Create a deep clone of an object. Any clone functions in source objects
+ * or sub-objects will be called to provide their own cloned implementations.
  * @todo eliminate circular references.
  * @param {object} src - objec to clone.
  * @param {object} [dest={}] object to merge cloned values into.
  */
-export function clone( src, dest={} ) {
+clone( src, dest={} ) {
 
 	var o, f;
 	for( let p in src ) {
@@ -26,17 +29,17 @@ export function clone( src, dest={} ) {
 
 	return dest;
 
-}
+},
 
 
 /**
- * Return an array of all Properties on an Object, and its ancestors.
+ * Return an array of all properties defined by an Object or its ancestors.
  * @param {Object} obj - Object whose properties are returned.
- * @param {bool} ownData - whether to include private data properties.
+ * @param {bool} ownData - whether to include private data variables.
  * @param {bool} getters - whether to include getter properties.
  * @return {string[]} Array of property names.
  */
-export function getProps( obj, ownData=true, getters=true ) {
+getProps( obj, ownData=true, getters=true ) {
 
 	if ( !obj ) return [];
 
@@ -46,7 +49,7 @@ export function getProps( obj, ownData=true, getters=true ) {
 
 	/// fast version for when private variables and getters don't
 	/// have to be ruled out.
-	if ( ownData === true && getters === true ) {
+	if ( getters === true ) {
 		while ( proto !== Object.prototype ) {
 
 			for ( p of Object.getOwnPropertyNames(proto)) {
@@ -68,10 +71,10 @@ export function getProps( obj, ownData=true, getters=true ) {
 
 				if ( typeof obj[p] === 'function') continue;
 				if ( Object.getOwnPropertyDescriptor(proto, p).get === undefined ) {
-					if ( ownData === true ) props.push( p );
-					else console.log( 'hiding internal prop: ' + p );
+					props.push( p );
+					//else console.log( 'hiding internal prop: ' + p );
 				} else {
-					if ( getters === true ) props.push(p)
+					if ( getters === true ) props.push(p);
 				}
 
 			}
@@ -83,7 +86,38 @@ export function getProps( obj, ownData=true, getters=true ) {
 
 	return props;
 
-}
+},
+
+/**
+ * Define values for all of an Object's undefined properties with setters
+ * up through its Object chain.
+ * This can be useful in frameworks like Vue, where watched Objects must
+ * have all their properties defined when the template is created.
+ * @param {Object} obj - Object to assign properties for.
+ * @param {*} [defaultVal=null] - Value to assign to undefined properties.
+ */
+defineVars( obj, defaultVal=null ) {
+
+	if ( !obj ) return;
+	let proto = obj;
+
+	while ( proto !== Object.prototype ) {
+
+		for ( p of Object.getOwnPropertyNames(proto)) {
+
+			if ( obj[p] !== undefined ) continue;
+			if ( Object.getOwnPropertyDescriptor(proto, p).set !== undefined ) {
+
+				obj[p] = defaultVal;
+
+			}
+
+		}
+		proto = Object.getPrototypeOf( proto );
+
+	} // while-loop.
+
+},
 
 /**
  * Searches an object's prototype chain for a property descriptor.
@@ -91,7 +125,7 @@ export function getProps( obj, ownData=true, getters=true ) {
  * @param {string} k - property key.
  * @returns {PropertyDescriptor|null}
  */
-export function getPropDesc(obj, k) {
+getPropDesc(obj, k) {
 
 	while (obj !== Object.prototype) {
 
@@ -102,7 +136,7 @@ export function getPropDesc(obj, k) {
 	}
 	return null;
 
-}
+},
 
 /**
  * Copies all values from a source object into a destination object.
@@ -111,7 +145,7 @@ export function getPropDesc(obj, k) {
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
-function assign(dest, src, exclude = null) {
+assign(dest, src, exclude = null) {
 
 	for (let p in src) {
 
@@ -124,7 +158,7 @@ function assign(dest, src, exclude = null) {
 
 	return dest;
 
-}
+},
 
 /**
  * Convert an object to a JSON object ready to be stringified.
@@ -133,7 +167,72 @@ function assign(dest, src, exclude = null) {
  * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist. 
  * @param {bool} [writableOnly=true] - Whether to only include writable properties.
  */
-function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
+jsonify(obj, excludes=null, includes=null, writableOnly = true) {
+
+	let r = {}, p;
+
+	if (includes) {
+		let len = includes.length;
+		for (let i = len - 1; i >= 0; i--) {
+			p = includes[i];
+			if (obj.hasOwnProperty(p)) r[p] = obj[p];
+		}
+	}
+
+	var proto = Object.getPrototypeOf(obj);
+	while (proto != Object.prototype) {
+
+		for (p of Object.getOwnPropertyNames(proto)) {
+
+			if ( excludes && excludes.includes(p) ) continue;
+
+			var desc = Object.getOwnPropertyDescriptor(proto, p);
+			if (writableOnly && desc.set === undefined && !desc.writable) continue;
+
+			var val = obj[p];
+			if (typeof val === 'function') continue;
+			r[p] = val;
+
+		}
+
+		proto = Object.getPrototypeOf(proto);
+
+	} //
+
+	return r;
+
+},
+
+/**
+ * Copies all values from a source object into a destination object.
+ * @param {Object} dest - Destination for json data.
+ * @param {Object} src - Object data to write into dest.
+ * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
+ * @returns {Object} the destination object.
+ */
+assign(dest, src, exclude = null) {
+
+	for (let p in src) {
+
+		if (exclude && exclude.includes(p)) continue;
+		var desc = getPropDesc(dest, p );
+		if ( desc === null || (desc.set === undefined && !desc.writable )) continue;
+		dest[p] = src[p];
+
+	} //for
+
+	return dest;
+
+},
+
+/**
+ * Convert an object to a new JSON object that can be stingified directly.
+ * @param {Object} obj - the objet to convert. 
+ * @param {string[]} [excludes=null] - Array of properties to exclude from encoding. 
+ * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist. 
+ * @param {bool} [writableOnly=true] - Whether to only include writable properties.
+ */
+jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
 	let r = {}, p;
 
@@ -169,67 +268,4 @@ function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
 }
 
-/**
- * Copies all values from a source object into a destination object.
- * @param {Object} dest - Destination for json data.
- * @param {Object} src - Object data to write into dest.
- * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
- * @returns {Object} the destination object.
- */
-export function assign(dest, src, exclude = null) {
-
-	for (let p in src) {
-
-		if (exclude && exclude.includes(p)) continue;
-		var desc = getPropDesc(dest, p );
-		if ( desc === null || (desc.set === undefined && !desc.writable )) continue;
-		dest[p] = src[p];
-
-	} //for
-
-	return dest;
-
-}
-
-/**
- * Convert an object to a JSON object ready to be stringified.
- * @param {Object} obj - the objet to convert. 
- * @param {string[]} [excludes=null] - Array of properties to exclude from encoding. 
- * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist. 
- * @param {bool} [writableOnly=true] - Whether to only include writable properties.
- */
-export function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
-
-	let r = {}, p;
-
-	if (includes) {
-		let len = includes.length;
-		for (let i = len - 1; i >= 0; i--) {
-			p = includes[i];
-			if (obj.hasOwnProperty(p)) r[p] = obj[p];
-		}
-	}
-
-	var proto = Object.getPrototypeOf(obj);
-	while (proto != Object.prototype) {
-
-		for (p of Object.getOwnPropertyNames(proto)) {
-
-			if ( excludes && excludes.includes(p) ) continue;
-
-			var desc = Object.getOwnPropertyDescriptor(proto, p);
-			if (writableOnly && desc.set === undefined && !desc.writable) continue;
-
-			var val = obj[p];
-			if (typeof val === 'function') continue;
-			r[p] = val;
-
-		}
-
-		proto = Object.getPrototypeOf(proto);
-
-	} //
-
-	return r;
-
-}
+};
