@@ -2,9 +2,9 @@ module.exports = {
 	
 /**
  * Create a deep clone of an object. Any clone functions in source objects
- * or sub-objects will be called to provide their own cloned implementations.
+ * or sub-objects are called to provide their own clone implementations.
  * @todo eliminate circular references.
- * @param {object} src - objec to clone.
+ * @param {object} src - object to clone.
  * @param {object} [dest={}] object to merge cloned values into.
  */
 clone( src, dest={} ) {
@@ -15,13 +15,13 @@ clone( src, dest={} ) {
 		o = src[p];
 		if ( o instanceof Array ) {
 
-			dest[p] = clone( [], o );
+			dest[p] = this.clone( [], o );
 
 		} else if ( o instanceof Object ) {
 
 			f = ( o.clone );
 			if ( f && typeof f === 'function' ) dest[p] = f.call( o );
-			else dest[p] = clone( {}, o );
+			else dest[p] = this.clone( {}, o );
 
 		} else dest[p] = o;
 
