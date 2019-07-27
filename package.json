@@ -1,6 +1,6 @@
 {
   "name": "objecty",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Object utils including deep clones, assign, property enumeration, prototype property enumeration, json conversion, deep reference, etc.",
   "main": "index.js",
   "scripts": {
