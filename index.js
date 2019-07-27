@@ -15,13 +15,13 @@ clone( src, dest={} ) {
 		o = src[p];
 		if ( o instanceof Array ) {
 
-			dest[p] = this.clone( [], o );
+			dest[p] = this.clone( o, [] );
 
 		} else if ( o instanceof Object ) {
 
 			f = ( o.clone );
 			if ( f && typeof f === 'function' ) dest[p] = f.call( o );
-			else dest[p] = this.clone( {}, o );
+			else dest[p] = this.clone( o );
 
 		} else dest[p] = o;
 
