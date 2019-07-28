@@ -1,4 +1,4 @@
-var clone = function( src, dest={} ){
+function clone( src, dest={} ){
 
 	let o, f;
 	for( let p in src ) {
