@@ -4,7 +4,8 @@ const clone = function( src, dest={} ){
 	for( let p in src ) {
 
 		o = src[p];
-		if ( o instanceof Array ) {
+		if ( !o ) dest[p] = o;
+		else if ( o instanceof Array ) {
 
 			dest[p] = clone( o, [] );
 
