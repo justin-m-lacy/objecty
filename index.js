@@ -1,3 +1,27 @@
+const clone = function( src, dest={} ){
+
+	var o, f;
+	for( let p in src ) {
+
+		o = src[p];
+		if ( o instanceof Array ) {
+
+			dest[p] = clone( o, [] );
+
+		} else if ( typeof o === 'object' ) {
+
+			f = ( o.clone );
+			if ( f && typeof f === 'function' ) dest[p] = f.call( o );
+			else dest[p] = clone( o );
+
+		} else dest[p] = o;
+
+	}
+
+	return dest;
+
+}
+
 module.exports = {
 	
 /**
@@ -7,29 +31,7 @@ module.exports = {
  * @param {object} src - object to clone.
  * @param {object} [dest={}] object to merge cloned values into.
  */
-clone( src, dest={} ) {
-
-	var o, f;
-	for( let p in src ) {
-
-		o = src[p];
-		if ( o instanceof Array ) {
-
-			dest[p] = this.clone( o, [] );
-
-		} else if ( o instanceof Object ) {
-
-			f = ( o.clone );
-			if ( f && typeof f === 'function' ) dest[p] = f.call( o );
-			else dest[p] = this.clone( o );
-
-		} else dest[p] = o;
-
-	}
-
-	return dest;
-
-},
+clone:clone,
 
 
 /**
