@@ -1,10 +1,10 @@
-const clone = function( src, dest={} ){
+var clone = function( src, dest={} ){
 
-	var o, f;
+	let o, f;
 	for( let p in src ) {
 
 		o = src[p];
-		if ( !o ) dest[p] = o;
+		if ( o === null || o === undefined ) dest[p] = o;
 		else if ( o instanceof Array ) {
 
 			dest[p] = clone( o, [] );
