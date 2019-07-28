@@ -1,3 +1,33 @@
+/**
+ * Deep clone of object, including class methods.
+ * @param {*} src 
+ * @param {*} dest 
+ */
+function cloneClass( src ) {
+	
+	let o, f;
+
+	const proto = Object.getPrototypeOf( src );
+	let dest = proto ? Object.create( proto ) : {};
+
+	for( let p in src ) {
+
+		o = src[p];
+		if ( o === null || o === undefined ) dest[p] = o;
+		else if ( typeof o === 'object' ) {
+
+			f = ( o.clone );
+			if ( f && typeof f === 'function' ) dest[p] = f.call( o );
+			else dest[p] = cloneClass( o );
+
+		} else dest[p] = o;
+
+	}
+
+	return dest;
+
+}
+
 function clone( src, dest={} ){
 
 	let o, f;
@@ -34,6 +64,12 @@ module.exports = {
  */
 clone:clone,
 
+/**
+ * Deep clone of object, including class prototype information.
+ * @param {*} src 
+ * @param {*} dest 
+ */
+cloneClass:cloneClass,
 
 /**
  * Return an array of all properties defined by an Object or its ancestors.
