@@ -1,4 +1,46 @@
 /**
+ * Merge two objects with overwrites from src.
+ * @param {Object} dest 
+ * @param {Object} src 
+ */
+function merge( dest, src ) {
+
+	for( let p in src ) {
+
+		var destSub = dest[p];
+		var srcSub = src[p];
+
+		var srcType = typeof srcSub;
+		if ( ( srcType !== 'object' && srcType !== 'function') ) {
+			dest[p] = srcSub;
+			continue;
+		}
+
+		var destType = typeof destSub;
+		if ( destType === 'object') this.merge( destSub, srcSub );
+		else if ( destType === 'array' ) {
+
+			if ( srcType === 'array') dest[p] = this.mergeArrays( destSub, srcSub );
+			else if ( !destSub.includes(srcSub) ) destSub.push(srcSub);
+
+		}
+
+
+	}
+
+}
+
+/**
+ * Merge unique elements of two arrays.
+ * @param {Array} a1 
+ * @param {Array} a2
+ * @returns {Array}
+ */
+function mergeArrays( a1, a2) {
+	return a1.concat( a2.filter(v=>!a1.includes(v) ) );
+}
+
+/**
  * Deep clone of object, including class methods.
  * @param {*} src 
  * @param {*} dest 
@@ -53,6 +95,45 @@ function clone( src, dest={} ){
 
 }
 
+/**
+ * Return an array of all string paths from base object
+ * which lead to a non-object property in the object or subobject.
+ * Paths to arrays are also returned, but not subpaths of arrays.
+ * Path strings are concatenated with '.'
+ * @param {Object} base
+ * @return {string[]}
+ */
+function propPaths( base ) {
+
+	let res = [];
+	let objStack = [];
+	let pathStack = [];
+
+	let path = '';
+
+	while ( base ) {
+
+		for( let p in base ) {
+
+			var sub = base[p];
+			if ( typeof sub === 'object' && !(sub instanceof Array) ) {
+				objStack.push(sub);
+				pathStack.push( path + p + '.' );
+				continue;
+			} else res.push( path + p );
+
+		}
+
+		base = objStack.pop();
+		if ( base === undefined ) break;
+		path = pathStack.pop();
+
+	}
+
+	return res;
+
+}
+
 module.exports = {
 	
 /**
@@ -70,6 +151,16 @@ clone:clone,
  * @param {*} dest 
  */
 cloneClass:cloneClass,
+
+propPaths:propPaths,
+
+/**
+ * Recursively merge two objects, with duplicate entries overwritten
+ * by src. Arrays are concatenated without duplicating array elements.
+ * @param {Object} dest
+ * @param {Object} src
+ */
+merge:merge,
 
 /**
  * Return an array of all properties defined by an Object or its ancestors.
