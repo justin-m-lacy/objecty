@@ -20,7 +20,7 @@ function merge( dest, src ) {
 		if ( destType === 'object') this.merge( destSub, srcSub );
 		else if ( destType === 'array' ) {
 
-			if ( srcType === 'array') dest[p] = this.mergeArrays( destSub, srcSub );
+			if ( srcType === 'array') dest[p] = mergeArrays( destSub, srcSub );
 			else if ( !destSub.includes(srcSub) ) destSub.push(srcSub);
 
 		}
