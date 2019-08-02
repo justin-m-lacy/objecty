@@ -219,6 +219,67 @@ getProps( obj, ownData=true, getters=true ) {
 },
 
 /**
+ * 
+ * @param {Array} a
+ * @returns {*} Random element of array. 
+ */
+randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; },
+
+/**
+ * Return a random element from and array which matches
+ * a predicate.
+ * @param {Array} a 
+ * @param {(*)=>boolean} pred - predicate test which a picked array element must pass.
+ * @returns {*} random element of array which passes the predicate.
+ */
+randMatch( a, pred ) {
+
+	let start = Math.floor( Math.random()*a.length );
+	let ind = start;
+
+	do {
+
+		if ( pred( a[ind] ) ) return a[ind];
+		ind = --ind >= 0 ? ind : a.length-1;
+
+	} while ( ind !== start );
+
+	return null;
+
+},
+
+/**
+ * Sort item of a target array or object into sublists
+ * based on each subobject's indexer value.
+ * @param {Array|Object} arr 
+ * @param {string|function} indexer - property indexer or function that returns sublist index.
+ * @returns {Object.<string|number,Array>} An object containing arrays
+ * of sub-objects with matching property values. 
+ */
+sublists( arr, indexer ) {
+
+	let lists = {};
+
+	let func = typeof indexer === 'function';
+
+	for( let i of arr ) {
+
+		var sub = arr[i];
+		if ( sub === null || sub === undefined ) continue;
+
+		var ind = func ? func(sub) : sub[indexer];
+		var list = lists[ind];
+		if ( list === null || list === undefined ) lists[ind] = list = [];
+
+		list.push(sub);
+
+	}
+
+	return lists;
+
+},
+
+/**
  * Define values for all of an Object's undefined properties with setters
  * up through its Object chain.
  * This can be useful in frameworks like Vue, where watched Objects must
