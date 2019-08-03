@@ -17,7 +17,7 @@ function merge( dest, src ) {
 		}
 
 		var destType = typeof destSub;
-		if ( destType === 'object') this.merge( destSub, srcSub );
+		if ( destType === 'object') merge( destSub, srcSub );
 		else if ( destType === 'array' ) {
 
 			if ( srcType === 'array') dest[p] = mergeArrays( destSub, srcSub );
@@ -49,7 +49,7 @@ function cloneClass( src ) {
 	
 	let o, f;
 
-	const proto = Object.getPrototypeOf( src );
+	let proto = Object.getPrototypeOf( src );
 	let dest = proto ? Object.create( proto ) : {};
 
 	for( let p in src ) {
@@ -66,6 +66,7 @@ function cloneClass( src ) {
 
 	}
 
+	console.log('returning : ' + dest.id );
 	return dest;
 
 }
