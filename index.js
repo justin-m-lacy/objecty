@@ -260,14 +260,15 @@ sublists( arr, indexer ) {
 
 	let lists = {};
 
-	let func = typeof indexer === 'function';
+	let func = ((typeof indexer) === 'function');
 
-	for( let i of arr ) {
+	for( let i in arr ) {
 
 		var sub = arr[i];
 		if ( sub === null || sub === undefined ) continue;
 
 		var ind = func ? func(sub) : sub[indexer];
+
 		var list = lists[ind];
 		if ( list === null || list === undefined ) lists[ind] = list = [];
 
