@@ -472,29 +472,36 @@ assign(dest, src, exclude = null) {
  */
 jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
-	let r = {}, p;
+	let r = {}, p, sub;
 
 	if (includes) {
 		let len = includes.length;
 		for (let i = len - 1; i >= 0; i--) {
+
 			p = includes[i];
-			if (obj.hasOwnProperty(p)) r[p] = obj[p];
+			if ( obj.hasOwnProperty(p) ) {
+				sub = obj[p];
+				if ( typeof sub === 'object' && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
+				else r[p] = sub;
+			}
+
 		}
 	}
 
 	var proto = Object.getPrototypeOf(obj);
 	while (proto != Object.prototype) {
 
-		for (p of Object.getOwnPropertyNames(proto)) {
+		for ( p of Object.getOwnPropertyNames(proto)) {
 
 			if ( excludes && excludes.includes(p) ) continue;
 
 			var desc = Object.getOwnPropertyDescriptor(proto, p);
 			if (writableOnly && desc.set === undefined && !desc.writable) continue;
 
-			var val = obj[p];
-			if (typeof val === 'function') continue;
-			r[p] = val;
+			var sub = obj[p];
+			if (typeof sub === 'function') continue;
+			if ( typeof sub === 'object' && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
+			else r[p] = sub;
 
 		}
 
