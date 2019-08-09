@@ -1,4 +1,54 @@
 /**
+ * Recursively collects all properties in an object which do not appear in
+ * the original, or which have been changed.
+ * Changed variables are collected and returned _without_ cloning.
+ * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
+ * are not copied unless they exist with new values.
+ * @param {Object} clone 
+ * @param {Object} original
+ * @returns {Object} collection of changed values, or null if none are changed.
+ */
+function changes( clone, original ) {
+
+	let res = {};
+	let count = 0;
+	let sub;
+
+	for( let p in clone ) {
+
+		sub = clone[p];
+		let orig = original[p];
+
+		if ( (sub === original[p]) ) continue;
+		if ( !sub ) {
+
+			if (!orig) continue;
+
+		} else if ( typeof sub === 'object' ) {
+
+			if ( typeof orig === 'object' && orig !== null ) {
+
+				sub = changes( sub, orig );
+				if ( sub === null ) continue;
+
+			}
+
+		}
+
+		if ( clone.id === 'prism' ) {
+			console.log('changed: ' + sub + ' orig: ' + orig );
+		}
+		res[p] = sub;
+		count++;		
+
+	}
+
+	console.log( clone.id + ' change count: ' + count );
+	return count > 0 ? res : null;
+
+}
+
+/**
  * Merge two objects with overwrites from src.
  * @param {Object} dest 
  * @param {Object} src 
@@ -7,23 +57,20 @@ function merge( dest, src ) {
 
 	for( let p in src ) {
 
-		var destSub = dest[p];
 		var srcSub = src[p];
 
-		var srcType = typeof srcSub;
-		if ( ( srcType !== 'object' && srcType !== 'function') ) {
+		if ( ( typeof srcSub !== 'object' && typeof srcSub !== 'function') ) {
 			dest[p] = srcSub;
 			continue;
 		}
 
-		var destType = typeof destSub;
-		if ( destType === 'object') merge( destSub, srcSub );
-		else if ( destType === 'array' ) {
+		var destSub = dest[p];
+		if ( destSub instanceof Array ) {
 
-			if ( srcType === 'array') dest[p] = mergeArrays( destSub, srcSub );
+			if (srcSub instanceof Array ) dest[p] = mergeArrays( destSub, srcSub );
 			else if ( !destSub.includes(srcSub) ) destSub.push(srcSub);
 
-		}
+		} else if ( typeof destSub === 'object') merge( destSub, srcSub );
 
 
 	}
@@ -31,7 +78,41 @@ function merge( dest, src ) {
 }
 
 /**
- * Merge unique elements of two arrays.
+ * Recursively merge values from src into dest, without overwriting any of dest's existing values.
+ * Object and array values are deep-cloned before being assigned to dest.
+ * Conflicting arrays are not merged.
+ * @param {Object} dest 
+ * @param {Object} src 
+ */
+function mergeSafe( dest, src ) {
+
+	for( let p in src ) {
+
+		var destSub = dest[p];
+		let srcSub = src[p];
+
+		if ( destSub === undefined ) {
+
+			if ( typeof srcSub === 'object' ) dest[p] = clone( srcSub, srcSub instanceof Array ? [] : {} );
+			else dest[p] = srcSub;
+
+			continue;
+
+		} else if ( destSub == null ) continue;
+
+
+		if ( srcSub && typeof destSub === 'object' && typeof srcSub === 'object') {
+
+			if ( !(destSub instanceof Array) && !(srcSub instanceof Array) ) mergeSafe( destSub, srcSub );
+
+		}
+
+	}
+
+}
+
+/**
+ * Merge two arrays, ignoring entries duplicated between arrays.
  * @param {Array} a1 
  * @param {Array} a2
  * @returns {Array}
@@ -41,9 +122,9 @@ function mergeArrays( a1, a2) {
 }
 
 /**
- * Deep clone of object, including class methods.
- * @param {*} src 
- * @param {*} dest 
+ * Performs a deep-clone of an object, including class prototype
+ * and class methods.
+ * @param {Object} src  
  */
 function cloneClass( src ) {
 	
@@ -66,7 +147,6 @@ function cloneClass( src ) {
 
 	}
 
-	console.log('returning : ' + dest.id );
 	return dest;
 
 }
@@ -136,7 +216,9 @@ function propPaths( base ) {
 }
 
 module.exports = {
-	
+
+	changes:changes,
+
 /**
  * Create a deep clone of an object. Any clone functions in source objects
  * or sub-objects are called to provide their own clone implementations.
@@ -162,6 +244,8 @@ propPaths:propPaths,
  * @param {Object} src
  */
 merge:merge,
+
+mergeSafe:mergeSafe,
 
 /**
  * Return an array of all properties defined by an Object or its ancestors.
