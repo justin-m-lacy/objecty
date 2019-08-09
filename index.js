@@ -498,7 +498,7 @@ jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 			var desc = Object.getOwnPropertyDescriptor(proto, p);
 			if (writableOnly && desc.set === undefined && !desc.writable) continue;
 
-			var sub = obj[p];
+			sub = obj[p];
 			if (typeof sub === 'function') continue;
 			if ( typeof sub === 'object' && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
 			else r[p] = sub;
