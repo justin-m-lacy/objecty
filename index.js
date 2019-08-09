@@ -10,14 +10,12 @@
  */
 function changes( clone, original ) {
 
-	let res = {};
-	let count = 0;
-	let sub;
+	let res = null;
 
 	for( let p in clone ) {
 
-		sub = clone[p];
-		let orig = original[p];
+		var sub = clone[p];
+		var orig = original[p];
 
 		if ( (sub === original[p]) ) continue;
 		if ( !sub ) {
@@ -35,16 +33,12 @@ function changes( clone, original ) {
 
 		}
 
-		if ( clone.id === 'prism' ) {
-			console.log('changed: ' + sub + ' orig: ' + orig );
-		}
-		res[p] = sub;
-		count++;		
+		if ( res === null ) res = {};
+		res[p] = sub;		
 
 	}
 
-	console.log( clone.id + ' change count: ' + count );
-	return count > 0 ? res : null;
+	return res;
 
 }
 
