@@ -1,13 +1,3 @@
-/**
- * Recursively collects all properties in an object which do not appear in
- * the original, or which have been changed.
- * Changed variables are collected and returned _without_ cloning.
- * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
- * are not copied unless they exist with new values.
- * @param {Object} clone 
- * @param {Object} original
- * @returns {Object} collection of changed values, or null if none are changed.
- */
 function changes( clone, original ) {
 
 	let res = null;
@@ -71,13 +61,7 @@ function merge( dest, src ) {
 
 }
 
-/**
- * Recursively merge values from src into dest, without overwriting any of dest's existing values.
- * Object and array values are deep-cloned before being assigned to dest.
- * Conflicting arrays are not merged.
- * @param {Object} dest 
- * @param {Object} src 
- */
+
 function mergeSafe( dest, src ) {
 
 	for( let p in src ) {
@@ -170,14 +154,6 @@ function clone( src, dest={} ){
 
 }
 
-/**
- * Return an array of all string paths from base object
- * which lead to a non-object property in the object or subobject.
- * Paths to arrays are also returned, but not subpaths of arrays.
- * Path strings are concatenated with '.'
- * @param {Object} base
- * @return {string[]}
- */
 function propPaths( base ) {
 
 	let res = [];
@@ -211,11 +187,24 @@ function propPaths( base ) {
 
 module.exports = {
 
-	changes:changes,
+/**
+ * Recursively collect all properties in an object which do not appear in
+ * an original template object, or which have been changed.
+ * Changed variables are collected and returned _without_ cloning.
+ * NOTE: falsey values are all considered equal when determining changes.
+ * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
+ * are NOT listed unless they exist with new values.
+ * @param {Object} clone 
+ * @param {Object} original
+ * @returns {Object} collection of properties existing in clone, which are different from values in original.
+ */
+changes:changes,
 
 /**
  * Create a deep clone of an object. Any clone functions in source objects
  * or sub-objects are called to provide their own clone implementations.
+ * @note dest is second parameter, whereas in Object.assign() it is first.
+ * 		This makes syntax of: var obj = clone(src); much clearer.
  * @todo eliminate circular references.
  * @param {object} src - object to clone.
  * @param {object} [dest={}] object to merge cloned values into.
@@ -229,6 +218,15 @@ clone:clone,
  */
 cloneClass:cloneClass,
 
+/**
+ * Return an array of all string paths from the base object
+ * which lead to a non-object property in the base object or subobject.
+ * Paths to arrays are also returned, but not subpaths of arrays.
+ * Path strings are concatenated with '.'
+ * ex. [ 'myObject.sub.prop1', 'myObject.sub.prop2' ]
+ * @param {Object} base
+ * @return {string[]} - array of non-object properties reachable through base.
+ */
 propPaths:propPaths,
 
 /**
@@ -239,6 +237,14 @@ propPaths:propPaths,
  */
 merge:merge,
 
+/**
+ * Recursively merge values from src into dest, without overwriting any of dest's existing values.
+ * Object and array values merged from src are deep-cloned before being copied to dest.
+ * Conflicting arrays are not merged.
+ * Nothing is returned, as all the changes are made _within_ dest.
+ * @param {Object} dest 
+ * @param {Object} src 
+ */
 mergeSafe:mergeSafe,
 
 /**
@@ -298,7 +304,7 @@ getProps( obj, ownData=true, getters=true ) {
 },
 
 /**
- * 
+ * Return random element of an array.
  * @param {Array} a
  * @returns {*} Random element of array. 
  */
@@ -468,7 +474,7 @@ assign(dest, src, exclude = null) {
  * @param {Object} obj - the objet to convert. 
  * @param {string[]} [excludes=null] - Array of properties to exclude from encoding. 
  * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist. 
- * @param {bool} [writableOnly=true] - Whether to only include writable properties.
+ * @param {bool} [writableOnly=true] - Whether to only include writable properties / exclude read-only properties.
  */
 jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
