@@ -481,7 +481,7 @@ jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 			p = includes[i];
 			if ( obj.hasOwnProperty(p) ) {
 				sub = obj[p];
-				if ( typeof sub === 'object' && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
+				if ( typeof sub === 'object' && sub !== null && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
 				else r[p] = sub;
 			}
 
@@ -500,7 +500,7 @@ jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
 			sub = obj[p];
 			if (typeof sub === 'function') continue;
-			if ( typeof sub === 'object' && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
+			if ( typeof sub === 'object' && sub !== null && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
 			else r[p] = sub;
 
 		}
