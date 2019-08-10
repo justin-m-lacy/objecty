@@ -308,7 +308,7 @@ getProps( obj, ownData=true, getters=true ) {
  * @param {Array} a
  * @returns {*} Random element of array. 
  */
-randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; },
+randElm( a ) { return a.length === 0 ? undefined : a[Math.floor( Math.random()*a.length) ]; },
 
 /**
  * Return a random element from and array which matches
