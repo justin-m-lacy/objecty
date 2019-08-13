@@ -49,9 +49,9 @@ function merge( dest, src ) {
 		}
 
 		var destSub = dest[p];
-		if ( destSub instanceof Array ) {
+		if (  Array.isArray(destSub) ) {
 
-			if (srcSub instanceof Array ) dest[p] = mergeArrays( destSub, srcSub );
+			if ( Array.isArray(srcSub) ) dest[p] = mergeArrays( destSub, srcSub );
 			else if ( !destSub.includes(srcSub) ) destSub.push(srcSub);
 
 		} else if ( typeof destSub === 'object') merge( destSub, srcSub );
@@ -71,17 +71,17 @@ function mergeSafe( dest, src ) {
 
 		if ( destSub === undefined ) {
 
-			if ( typeof srcSub === 'object' ) dest[p] = clone( srcSub, srcSub instanceof Array ? [] : {} );
+			if ( typeof srcSub === 'object' ) dest[p] = clone( srcSub, Array.isArray(srcSub) ? [] : {} );
 			else dest[p] = srcSub;
 
 			continue;
 
-		} else if ( destSub == null ) continue;
+		} else if ( destSub === null ) continue;
 
 
 		if ( srcSub && typeof destSub === 'object' && typeof srcSub === 'object') {
 
-			if ( !(destSub instanceof Array) && !(srcSub instanceof Array) ) mergeSafe( destSub, srcSub );
+			if ( !Array.isArray(destSub) && !Array.isArray(srcSub) ) mergeSafe( destSub, srcSub );
 
 		}
 
@@ -102,7 +102,7 @@ function mergeArrays( a1, a2) {
 /**
  * Performs a deep-clone of an object, including class prototype
  * and class methods.
- * @param {Object} src  
+ * @param {Object} src
  */
 function cloneClass( src ) {
 	
@@ -136,7 +136,7 @@ function clone( src, dest={} ){
 
 		o = src[p];
 		if ( o === null || o === undefined ) dest[p] = o;
-		else if ( o instanceof Array ) {
+		else if ( Array.isArray(o) ) {
 
 			dest[p] = clone( o, [] );
 
@@ -167,7 +167,7 @@ function propPaths( base ) {
 		for( let p in base ) {
 
 			var sub = base[p];
-			if ( typeof sub === 'object' && !(sub instanceof Array) ) {
+			if ( typeof sub === 'object' && !( Array.isArray(sub)) ) {
 				objStack.push(sub);
 				pathStack.push( path + p + '.' );
 				continue;
