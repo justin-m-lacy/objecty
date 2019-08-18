@@ -109,7 +109,7 @@ function cloneClass( src ) {
 	let o, f;
 
 	let proto = Object.getPrototypeOf( src );
-	let dest = proto ? Object.create( proto ) : {};
+	let dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
 
 	for( let p in src ) {
 
