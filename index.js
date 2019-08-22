@@ -109,7 +109,7 @@ function cloneClass( src ) {
 	let o, f;
 
 	let proto = Object.getPrototypeOf( src );
-	let dest = Array.isArray(src) ? new Array(src.length) : ( proto ? Object.create( proto ) : {} );
+	let dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
 
 	for( let p in src ) {
 
@@ -300,6 +300,22 @@ getProps( obj, ownData=true, getters=true ) {
 	}
 
 	return props;
+
+},
+
+
+/**
+ * Determines if array contains any of the given params.
+ * @param {Array} arr - array to test for inclusions.
+ * @param  {...any} params - arguments to test for inclusion in array.
+ * @returns {boolean} - true if at least one param is found in the array.
+ */
+includesAny( arr, ...params ) {
+
+	for( let i = params.length-1; i>= 0; i-- ) {
+		if ( arr.includes(params[i]) ) return true;
+	}
+	return false;
 
 },
 
