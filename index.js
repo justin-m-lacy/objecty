@@ -24,7 +24,7 @@ function changes( clone, original ) {
 		}
 
 		if ( res === null ) res = {};
-		res[p] = sub;		
+		res[p] = sub;
 
 	}
 
@@ -34,8 +34,8 @@ function changes( clone, original ) {
 
 /**
  * Merge two objects with overwrites from src.
- * @param {Object} dest 
- * @param {Object} src 
+ * @param {Object} dest
+ * @param {Object} src
  */
 function merge( dest, src ) {
 
@@ -71,7 +71,7 @@ function mergeSafe( dest, src ) {
 
 		if ( destSub === undefined ) {
 
-			if ( typeof srcSub === 'object' ) dest[p] = clone( srcSub, Array.isArray(srcSub) ? [] : {} );
+			if ( srcSub !== null && typeof srcSub === 'object' ) dest[p] = clone( srcSub, Array.isArray(srcSub) ? [] : {} );
 			else dest[p] = srcSub;
 
 			continue;
@@ -91,7 +91,7 @@ function mergeSafe( dest, src ) {
 
 /**
  * Merge two arrays, ignoring entries duplicated between arrays.
- * @param {Array} a1 
+ * @param {Array} a1
  * @param {Array} a2
  * @returns {Array}
  */
@@ -105,7 +105,7 @@ function mergeArrays( a1, a2) {
  * @param {Object} src
  */
 function cloneClass( src ) {
-	
+
 	let o, f;
 
 	let proto = Object.getPrototypeOf( src );
@@ -194,7 +194,7 @@ module.exports = {
  * NOTE: falsey values are all considered equal when determining changes.
  * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
  * are NOT listed unless they exist with new values.
- * @param {Object} clone 
+ * @param {Object} clone
  * @param {Object} original
  * @returns {Object} collection of properties existing in clone, which are different from values in original.
  */
@@ -213,8 +213,8 @@ clone:clone,
 
 /**
  * Deep clone of object, including class prototype information.
- * @param {*} src 
- * @param {*} dest 
+ * @param {*} src
+ * @param {*} dest
  */
 cloneClass:cloneClass,
 
@@ -242,8 +242,8 @@ merge:merge,
  * Object and array values merged from src are deep-cloned before being copied to dest.
  * Conflicting arrays are not merged.
  * Nothing is returned, as all the changes are made _within_ dest.
- * @param {Object} dest 
- * @param {Object} src 
+ * @param {Object} dest
+ * @param {Object} src
  */
 mergeSafe:mergeSafe,
 
@@ -275,7 +275,7 @@ getProps( obj, ownData=true, getters=true ) {
 			// quick push.
 			//props.push.apply( props, Object.getOwnPropertyNames(proto) );
 			proto = Object.getPrototypeOf( proto );
-	
+
 		} // while-loop.
 
 	} else {
@@ -322,14 +322,14 @@ includesAny( arr, ...params ) {
 /**
  * Return random element of an array.
  * @param {Array} a
- * @returns {*} Random element of array. 
+ * @returns {*} Random element of array.
  */
 randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; },
 
 /**
  * Return a random element from and array which matches
  * a predicate.
- * @param {Array} a 
+ * @param {Array} a
  * @param {(*)=>boolean} pred - predicate test which a picked array element must pass.
  * @returns {*} random element of array which passes the predicate.
  */
@@ -352,10 +352,10 @@ randMatch( a, pred ) {
 /**
  * Sort item of a target array or object into sublists
  * based on each subobject's indexer value.
- * @param {Array|Object} arr 
+ * @param {Array|Object} arr
  * @param {string|function} indexer - property indexer or function that returns sublist index.
  * @returns {Object.<string|number,Array>} An object containing arrays
- * of sub-objects with matching property values. 
+ * of sub-objects with matching property values.
  */
 sublists( arr, indexer ) {
 
@@ -446,7 +446,7 @@ defineExcept( obj, defaultVal=null, except=[] ) {
 
 /**
  * Searches an object's prototype chain for a property descriptor.
- * @param {Object} obj 
+ * @param {Object} obj
  * @param {string} k - property key.
  * @returns {PropertyDescriptor|null}
  */
@@ -487,9 +487,9 @@ assign(dest, src, exclude = null) {
 
 /**
  * Convert an object to a JSON object ready to be stringified.
- * @param {Object} obj - the objet to convert. 
- * @param {string[]} [excludes=null] - Array of properties to exclude from encoding. 
- * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist. 
+ * @param {Object} obj - the objet to convert.
+ * @param {string[]} [excludes=null] - Array of properties to exclude from encoding.
+ * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist.
  * @param {bool} [writableOnly=true] - Whether to only include writable properties / exclude read-only properties.
  */
 jsonify(obj, excludes=null, includes=null, writableOnly = true) {
