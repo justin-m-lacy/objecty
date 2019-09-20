@@ -61,7 +61,6 @@ function merge( dest, src ) {
 
 }
 
-
 function mergeSafe( dest, src ) {
 
 	for( let p in src ) {
@@ -185,68 +184,6 @@ function propPaths( base ) {
 
 }
 
-module.exports = {
-
-/**
- * Recursively collect all properties in an object which do not appear in
- * an original template object, or which have been changed.
- * Changed variables are collected and returned _without_ cloning.
- * NOTE: falsey values are all considered equal when determining changes.
- * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
- * are NOT listed unless they exist with new values.
- * @param {Object} clone
- * @param {Object} original
- * @returns {Object} collection of properties existing in clone, which are different from values in original.
- */
-changes:changes,
-
-/**
- * Create a deep clone of an object. Any clone functions in source objects
- * or sub-objects are called to provide their own clone implementations.
- * @note dest is second parameter, whereas in Object.assign() it is first.
- * 		This makes syntax of: var obj = clone(src); much clearer.
- * @todo eliminate circular references.
- * @param {object} src - object to clone.
- * @param {object} [dest={}] object to merge cloned values into.
- */
-clone:clone,
-
-/**
- * Deep clone of object, including class prototype information.
- * @param {*} src
- * @param {*} dest
- */
-cloneClass:cloneClass,
-
-/**
- * Return an array of all string paths from the base object
- * which lead to a non-object property in the base object or subobject.
- * Paths to arrays are also returned, but not subpaths of arrays.
- * Path strings are concatenated with '.'
- * ex. [ 'myObject.sub.prop1', 'myObject.sub.prop2' ]
- * @param {Object} base
- * @return {string[]} - array of non-object properties reachable through base.
- */
-propPaths:propPaths,
-
-/**
- * Recursively merge two objects, with duplicate entries overwritten
- * by src. Arrays are concatenated without duplicating array elements.
- * @param {Object} dest
- * @param {Object} src
- */
-merge:merge,
-
-/**
- * Recursively merge values from src into dest, without overwriting any of dest's existing values.
- * Object and array values merged from src are deep-cloned before being copied to dest.
- * Conflicting arrays are not merged.
- * Nothing is returned, as all the changes are made _within_ dest.
- * @param {Object} dest
- * @param {Object} src
- */
-mergeSafe:mergeSafe,
-
 /**
  * Return an array of all properties defined by an Object or its ancestors.
  * @param {Object} obj - Object whose properties are returned.
@@ -254,7 +191,7 @@ mergeSafe:mergeSafe,
  * @param {bool} getters - whether to include getter properties.
  * @return {string[]} Array of property names.
  */
-getProps( obj, ownData=true, getters=true ) {
+function getProps( obj, ownData=true, getters=true ) {
 
 	if ( !obj ) return [];
 
@@ -301,7 +238,7 @@ getProps( obj, ownData=true, getters=true ) {
 
 	return props;
 
-},
+}
 
 
 /**
@@ -310,21 +247,21 @@ getProps( obj, ownData=true, getters=true ) {
  * @param  {...any} params - arguments to test for inclusion in array.
  * @returns {boolean} - true if at least one param is found in the array.
  */
-includesAny( arr, ...params ) {
+function includesAny( arr, ...params ) {
 
 	for( let i = params.length-1; i>= 0; i-- ) {
 		if ( arr.includes(params[i]) ) return true;
 	}
 	return false;
 
-},
+}
 
 /**
  * Return random element of an array.
  * @param {Array} a
  * @returns {*} Random element of array.
  */
-randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; },
+function randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; }
 
 /**
  * Return a random element from and array which matches
@@ -333,7 +270,7 @@ randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; },
  * @param {(*)=>boolean} pred - predicate test which a picked array element must pass.
  * @returns {*} random element of array which passes the predicate.
  */
-randMatch( a, pred ) {
+function randMatch( a, pred ) {
 
 	let start = Math.floor( Math.random()*a.length );
 	let ind = start;
@@ -347,7 +284,7 @@ randMatch( a, pred ) {
 
 	return null;
 
-},
+}
 
 /**
  * Sort item of a target array or object into sublists
@@ -357,7 +294,7 @@ randMatch( a, pred ) {
  * @returns {Object.<string|number,Array>} An object containing arrays
  * of sub-objects with matching property values.
  */
-sublists( arr, indexer ) {
+function sublists( arr, indexer ) {
 
 	let lists = {};
 
@@ -379,7 +316,7 @@ sublists( arr, indexer ) {
 
 	return lists;
 
-},
+}
 
 /**
  * Define values for all of an Object's undefined properties with setters
@@ -389,7 +326,7 @@ sublists( arr, indexer ) {
  * @param {Object} obj - Object to assign properties for.
  * @param {*} [defaultVal=null] - Value to assign to undefined properties.
  */
-defineVars( obj, defaultVal=null ) {
+function defineVars( obj, defaultVal=null ) {
 
 	if ( !obj ) return;
 	let proto = obj;
@@ -410,7 +347,7 @@ defineVars( obj, defaultVal=null ) {
 
 	} // while-loop.
 
-},
+}
 
 /**
  * Define values for all of an Object's undefined properties with setters
@@ -421,14 +358,14 @@ defineVars( obj, defaultVal=null ) {
  * @param {*} [defaultVal=null] - Value to assign to undefined properties.
  * @param {string[]} [except=[]] - Properties to ignore.
  */
-defineExcept( obj, defaultVal=null, except=[] ) {
+function defineExcept( obj, defaultVal=null, except=[] ) {
 
 	if ( !obj ) return;
 	let proto = obj;
 
 	while ( proto !== Object.prototype ) {
 
-		for ( p of Object.getOwnPropertyNames(proto)) {
+		for ( let p of Object.getOwnPropertyNames(proto)) {
 
 			if ( except.includes(p) || obj[p] !== undefined ) continue;
 			if ( Object.getOwnPropertyDescriptor(proto, p).set !== undefined ) {
@@ -442,7 +379,7 @@ defineExcept( obj, defaultVal=null, except=[] ) {
 
 	} // while-loop.
 
-},
+}
 
 /**
  * Searches an object's prototype chain for a property descriptor.
@@ -450,7 +387,7 @@ defineExcept( obj, defaultVal=null, except=[] ) {
  * @param {string} k - property key.
  * @returns {PropertyDescriptor|null}
  */
-getPropDesc(obj, k) {
+function getPropDesc(obj, k) {
 
 	while (obj !== Object.prototype) {
 
@@ -461,7 +398,7 @@ getPropDesc(obj, k) {
 	}
 	return null;
 
-},
+}
 
 /**
  * Copies all values from a source object into a destination object.
@@ -470,12 +407,12 @@ getPropDesc(obj, k) {
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
-assign(dest, src, exclude = null) {
+function assign(dest, src, exclude = null) {
 
 	for (let p in src) {
 
 		if (exclude && exclude.includes(p)) continue;
-		var desc = this.getPropDesc(dest, p );
+		var desc = getPropDesc(dest, p );
 		if ( desc === null || (desc.set === undefined && !desc.writable )) continue;
 		dest[p] = src[p];
 
@@ -483,7 +420,7 @@ assign(dest, src, exclude = null) {
 
 	return dest;
 
-},
+}
 
 /**
  * Convert an object to a JSON object ready to be stringified.
@@ -492,7 +429,7 @@ assign(dest, src, exclude = null) {
  * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist.
  * @param {bool} [writableOnly=true] - Whether to only include writable properties / exclude read-only properties.
  */
-jsonify(obj, excludes=null, includes=null, writableOnly = true) {
+function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
 	let r = {}, p, sub;
 
@@ -534,5 +471,69 @@ jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 	return r;
 
 }
+
+export {
+
+/**
+ * Recursively collect all properties in an object which do not appear in
+ * an original template object, or which have been changed.
+ * Changed variables are collected and returned _without_ cloning.
+ * NOTE: falsey values are all considered equal when determining changes.
+ * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
+ * are NOT listed unless they exist with new values.
+ * @param {Object} clone
+ * @param {Object} original
+ * @returns {Object} collection of properties existing in clone, which are different from values in original.
+ */
+changes,
+
+/**
+ * Create a deep clone of an object. Any clone functions in source objects
+ * or sub-objects are called to provide their own clone implementations.
+ * @note dest is second parameter, whereas in Object.assign() it is first.
+ * 		This makes syntax of: var obj = clone(src); much clearer.
+ * @todo eliminate circular references.
+ * @param {object} src - object to clone.
+ * @param {object} [dest={}] object to merge cloned values into.
+ */
+clone,
+
+/**
+ * Deep clone of object, including class prototype information.
+ * @param {*} src
+ * @param {*} dest
+ */
+cloneClass,
+
+/**
+ * Return an array of all string paths from the base object
+ * which lead to a non-object property in the base object or subobject.
+ * Paths to arrays are also returned, but not subpaths of arrays.
+ * Path strings are concatenated with '.'
+ * ex. [ 'myObject.sub.prop1', 'myObject.sub.prop2' ]
+ * @param {Object} base
+ * @return {string[]} - array of non-object properties reachable through base.
+ */
+propPaths,
+
+/**
+ * Recursively merge two objects, with duplicate entries overwritten
+ * by src. Arrays are concatenated without duplicating array elements.
+ * @param {Object} dest
+ * @param {Object} src
+ */
+merge,
+
+/**
+ * Recursively merge values from src into dest, without overwriting any of dest's existing values.
+ * Object and array values merged from src are deep-cloned before being copied to dest.
+ * Conflicting arrays are not merged.
+ * Nothing is returned, as all the changes are made _within_ dest.
+ * @param {Object} dest
+ * @param {Object} src
+ */
+mergeSafe,
+
+getProps,includesAny,randElm,getPropDesc,assign,defineExcept,jsonify,defineVars,sublists,randMatch
 
 };
