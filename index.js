@@ -113,6 +113,10 @@ function cloneClass( src ) {
 	for( let p in src ) {
 
 		o = src[p];
+
+		var def = getPropDesc( dest, p );
+		if ( def && ( !def.writable || def.set === undefined ) ) continue;
+
 		if ( o === null || o === undefined ) dest[p] = o;
 		else if ( typeof o === 'object' ) {
 
