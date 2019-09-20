@@ -401,7 +401,8 @@ function getPropDesc(obj, k) {
 }
 
 /**
- * Copies all values from a source object into a destination object.
+ * Copies all values from a source object into a destination object,
+ * if property is writable on destination.
  * @param {Object} dest - Destination for json data.
  * @param {Object} src - Object data to write into dest.
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
@@ -409,14 +410,47 @@ function getPropDesc(obj, k) {
  */
 function assign(dest, src, exclude = null) {
 
-	for (let p in src) {
+	while ( src !== Object.prototype ) {
+
+		for (let p of Object.getOwnPropertyNames(src) ) {
+
+			if (exclude && exclude.includes(p)) continue;
+			var desc = getPropDesc(dest, p );
+
+			if ( desc && (desc.set === undefined && !desc.writable )) continue;
+
+			dest[p] = src[p];
+
+		} //for
+
+		src = Object.getPrototypeOf(src);
+	}
+
+	return dest;
+
+}
+
+/**
+ * Copies all values from a source object into a destination object,
+ * when those values exist as properties of the destination.
+ * @param {Object} dest - Destination for json data.
+ * @param {Object} src - Object data to write into dest.
+ * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
+ * @returns {Object} the destination object.
+ */
+function assignOwn(dest, src, exclude = null) {
+
+	for (let p in src ) {
 
 		if (exclude && exclude.includes(p)) continue;
 		var desc = getPropDesc(dest, p );
+
 		if ( desc === null || (desc.set === undefined && !desc.writable )) continue;
+
 		dest[p] = src[p];
 
 	} //for
+
 
 	return dest;
 
@@ -534,6 +568,6 @@ merge,
  */
 mergeSafe,
 
-getProps,includesAny,randElm,getPropDesc,assign,defineExcept,jsonify,defineVars,sublists,randMatch
+getProps,includesAny,randElm,getPropDesc,assign,defineExcept,jsonify,defineVars,sublists,randMatch, assignOwn
 
 };
