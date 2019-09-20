@@ -475,7 +475,7 @@ assign(dest, src, exclude = null) {
 	for (let p in src) {
 
 		if (exclude && exclude.includes(p)) continue;
-		var desc = getPropDesc(dest, p );
+		var desc = this.getPropDesc(dest, p );
 		if ( desc === null || (desc.set === undefined && !desc.writable )) continue;
 		dest[p] = src[p];
 
