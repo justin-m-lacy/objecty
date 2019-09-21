@@ -414,9 +414,10 @@ function getPropDesc(obj, k) {
  */
 function assign(dest, src, exclude = null) {
 
-	while ( src !== Object.prototype ) {
+	var vars = src;
+	while ( vars !== Object.prototype ) {
 
-		for (let p of Object.getOwnPropertyNames(src) ) {
+		for (let p of Object.getOwnPropertyNames(vars) ) {
 
 			if (exclude && exclude.includes(p)) continue;
 			var desc = getPropDesc(dest, p );
@@ -427,7 +428,7 @@ function assign(dest, src, exclude = null) {
 
 		} //for
 
-		src = Object.getPrototypeOf(src);
+		vars = Object.getPrototypeOf(vars);
 	}
 
 	return dest;
