@@ -102,13 +102,15 @@ function mergeArrays( a1, a2) {
  * Performs a deep-clone of an object, including class prototype
  * and class methods.
  * @param {Object} src
+ * @param {?Object} [dest=null] - optional base object of the clone.
+ * if set, root object will not be cloned, only subobjects.
  */
-function cloneClass( src ) {
+function cloneClass( src, dest=null ) {
 
-	let o, f;
+	let o;
 
 	let proto = Object.getPrototypeOf( src );
-	let dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
+	if ( !dest ) dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
 
 	for( let p in src ) {
 
@@ -120,8 +122,7 @@ function cloneClass( src ) {
 		if ( o === null || o === undefined ) dest[p] = o;
 		else if ( typeof o === 'object' ) {
 
-			f = ( o.clone );
-			if ( f && typeof f === 'function' ) dest[p] = f.call( o );
+			if ( o.clone && typeof o.clone === 'function' ) dest[p] = o.clone.call( o );
 			else dest[p] = cloneClass( o );
 
 		} else dest[p] = o;
