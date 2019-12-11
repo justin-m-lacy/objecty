@@ -18,7 +18,9 @@ export function changes( clone, original ) {
 		var sub = clone[p];
 		var orig = original[p];
 
-		if ( (sub === original[p]) ) continue;
+		if ( sub == orig ){
+			continue;
+		}
 		if ( !sub ) {
 
 			if (!orig) continue;
