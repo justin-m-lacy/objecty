@@ -1,4 +1,15 @@
-function changes( clone, original ) {
+/**
+ * Recursively collect all properties in an object which do not appear in
+ * an original template object, or which have been changed.
+ * Changed variables are collected and returned _without_ cloning.
+ * NOTE: falsey values are all considered equal when determining changes.
+ * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
+ * are NOT listed unless they exist with new values.
+ * @param {Object} clone
+ * @param {Object} original
+ * @returns {Object} collection of properties existing in clone, which are different from values in original.
+ */
+export function changes( clone, original ) {
 
 	let res = null;
 
@@ -33,11 +44,12 @@ function changes( clone, original ) {
 }
 
 /**
- * Merge two objects with overwrites from src.
+ * Recursively merge two objects, with duplicate entries overwritten
+ * by src. Arrays are concatenated without duplicating array elements.
  * @param {Object} dest
  * @param {Object} src
  */
-function merge( dest, src ) {
+export function merge( dest, src ) {
 
 	for( let p in src ) {
 
@@ -61,7 +73,15 @@ function merge( dest, src ) {
 
 }
 
-function mergeSafe( dest, src ) {
+/**
+ * Recursively merge values from src into dest, without overwriting any of dest's existing values.
+ * Object and array values merged from src are deep-cloned before being copied to dest.
+ * Conflicting arrays are not merged.
+ * Nothing is returned, as all the changes are made _within_ dest.
+ * @param {Object} dest
+ * @param {Object} src
+ */
+export function mergeSafe( dest, src ) {
 
 	for( let p in src ) {
 
@@ -90,12 +110,26 @@ function mergeSafe( dest, src ) {
 
 /**
  * Merge two arrays, ignoring entries duplicated between arrays.
+ * This does not remove duplicated entries already existing in
+ * either array separately.
  * @param {Array} a1
  * @param {Array} a2
  * @returns {Array}
  */
-function mergeArrays( a1, a2) {
-	return a1.concat( a2.filter(v=>!a1.includes(v) ) );
+export function mergeArrays( a1, a2) {
+
+	let a = a1.slice();
+	let len = a2.length;
+
+	for( let i = 0; i < len; i++ ) {
+
+		var v = a2[i];
+		if ( a1.includes(v) === false ) {
+			a.push(v);
+		}
+
+	}
+	return a;
 }
 
 /**
@@ -105,7 +139,7 @@ function mergeArrays( a1, a2) {
  * @param {?Object} [dest=null] - optional base object of the clone.
  * if set, root object will not be cloned, only subobjects.
  */
-function cloneClass( src, dest=null ) {
+export function cloneClass( src, dest=null ) {
 
 	let o;
 
@@ -133,7 +167,16 @@ function cloneClass( src, dest=null ) {
 
 }
 
-function clone( src, dest={} ){
+/**
+ * Create a deep clone of an object. Any clone functions in source objects
+ * or sub-objects are called to provide their own clone implementations.
+ * @note dest is second parameter, whereas in Object.assign() it is first.
+ * 		This makes syntax of: var obj = clone(src); much clearer.
+ * @todo eliminate circular references.
+ * @param {object} src - object to clone.
+ * @param {object} [dest={}] object to merge cloned values into.
+ */
+export function clone( src, dest={} ){
 
 	let o, f;
 	for( let p in src ) {
@@ -158,7 +201,16 @@ function clone( src, dest={} ){
 
 }
 
-function propPaths( base ) {
+/**
+ * Return an array of all string paths from the base object
+ * which lead to a non-object property in the base object or subobject.
+ * Paths to arrays are also returned, but not subpaths of arrays.
+ * Path strings are concatenated with '.'
+ * ex. [ 'myObject.sub.prop1', 'myObject.sub.prop2' ]
+ * @param {Object} base
+ * @return {string[]} - array of non-object properties reachable through base.
+ */
+export function propPaths( base ) {
 
 	let res = [];
 	let objStack = [];
@@ -190,13 +242,73 @@ function propPaths( base ) {
 }
 
 /**
+ * Returns a Map of all properties in an object's prototype chain,
+ * not including Object.prototype, which cannot be assigned to,
+ * either because they are marked writable=false, or because
+ * they are properties without setters.
+ * @param {object} obj
+ * @returns {Map.<string,true>} map of unwritable property names
+ * mapping to true.
+ */
+export function getNoWrite( obj ) {
+
+	let m = new Map();
+
+	let proto = obj;
+	while ( proto !== Object.prototype ) {
+
+		var descs = Object.getOwnPropertyDescriptors( proto );
+		for ( let p in descs ) {
+
+			var d = descs[p];
+			if ( (d.writable !== true) && d.set === undefined )  m.set(p,true);
+
+		}
+
+		proto = Object.getPrototypeOf( proto );
+
+	} // while-loop.
+
+	return m;
+
+}
+
+/**
+ * Get all property descriptors in an object's prototype chain,
+ * not including the Object.prototype itself.
+ * Descriptors are returned as a Map where property names
+ * map to property descriptors.
+ * @param {object} obj
+ * @param {Map}
+ */
+export function getDescs( obj ) {
+
+	let m = new Map();
+
+	let proto = obj;
+	while ( proto !== Object.prototype ) {
+
+		var descs = Object.getOwnPropertyDescriptors( proto );
+		for ( let p in descs ) {
+			m.set( p, descs[p]);
+		}
+
+		proto = Object.getPrototypeOf( proto );
+
+	} // while-loop.
+
+	return m;
+
+}
+
+/**
  * Return an array of all properties defined by an Object or its ancestors.
  * @param {Object} obj - Object whose properties are returned.
  * @param {bool} ownData - whether to include private data variables.
  * @param {bool} getters - whether to include getter properties.
  * @return {string[]} Array of property names.
  */
-function getProps( obj, ownData=true, getters=true ) {
+export function getProps( obj, ownData=true, getters=true ) {
 
 	if ( !obj ) return [];
 
@@ -252,7 +364,7 @@ function getProps( obj, ownData=true, getters=true ) {
  * @param  {...any} params - arguments to test for inclusion in array.
  * @returns {boolean} - true if at least one param is found in the array.
  */
-function includesAny( arr, ...params ) {
+export function includesAny( arr, ...params ) {
 
 	for( let i = params.length-1; i>= 0; i-- ) {
 		if ( arr.includes(params[i]) ) return true;
@@ -266,16 +378,16 @@ function includesAny( arr, ...params ) {
  * @param {Array} a
  * @returns {*} Random element of array.
  */
-function randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; }
+export function randElm( a ) { return a[Math.floor( Math.random()*a.length) ]; }
 
 /**
  * Return a random element from and array which matches
  * a predicate.
  * @param {Array} a
  * @param {(*)=>boolean} pred - predicate test which a picked array element must pass.
- * @returns {*} random element of array which passes the predicate.
+ * @returns {*} random element of array which passes predicate.
  */
-function randMatch( a, pred ) {
+export function randMatch( a, pred ) {
 
 	let start = Math.floor( Math.random()*a.length );
 	let ind = start;
@@ -299,7 +411,7 @@ function randMatch( a, pred ) {
  * @returns {Object.<string|number,Array>} An object containing arrays
  * of sub-objects with matching property values.
  */
-function sublists( arr, indexer ) {
+export function sublists( arr, indexer ) {
 
 	let lists = {};
 
@@ -331,7 +443,7 @@ function sublists( arr, indexer ) {
  * @param {Object} obj - Object to assign properties for.
  * @param {*} [defaultVal=null] - Value to assign to undefined properties.
  */
-function defineVars( obj, defaultVal=null ) {
+export function defineVars( obj, defaultVal=null ) {
 
 	if ( !obj ) return;
 	let proto = obj;
@@ -363,7 +475,7 @@ function defineVars( obj, defaultVal=null ) {
  * @param {*} [defaultVal=null] - Value to assign to undefined properties.
  * @param {string[]} [except=[]] - Properties to ignore.
  */
-function defineExcept( obj, defaultVal=null, except=[] ) {
+export function defineExcept( obj, defaultVal=null, except=[] ) {
 
 	if ( !obj ) return;
 	let proto = obj;
@@ -392,7 +504,7 @@ function defineExcept( obj, defaultVal=null, except=[] ) {
  * @param {string} k - property key.
  * @returns {PropertyDescriptor|null}
  */
-function getPropDesc(obj, k) {
+export function getPropDesc(obj, k) {
 
 	while (obj !== Object.prototype) {
 
@@ -407,29 +519,30 @@ function getPropDesc(obj, k) {
 
 /**
  * Copies all values from a source object into a destination object,
- * if property is writable on destination.
- * @param {Object} dest - Destination for json data.
+ * ignoring properties that are unwritable and have no setter.
+ * @param {Object} dest - Destination object.
  * @param {Object} src - Object data to write into dest.
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
-function assign(dest, src, exclude = null) {
+export function assign(dest, src, exclude = null) {
 
-	var vars = src;
-	while ( vars !== Object.prototype ) {
+	var nowrite = getNoWrite(dest);
+	if ( exclude ) {
+		// mark exclusions.
+		for( let i = exclude.length-1; i >= 0; i-- ) nowrite.set(exclude[i], true);
+	}
 
-		for (let p of Object.getOwnPropertyNames(vars) ) {
+	var svars = src;
+	while ( svars !== Object.prototype ) {
 
-			if (exclude && exclude.includes(p)) continue;
-			var desc = getPropDesc(dest, p );
+		for (let p of Object.getOwnPropertyNames(svars) ) {
 
-			if ( desc && (desc.set === undefined && !desc.writable )) continue;
-
-			dest[p] = src[p];
+			if ( nowrite.has(p) !== true ) dest[p] = src[p];
 
 		} //for
 
-		vars = Object.getPrototypeOf(vars);
+		svars = Object.getPrototypeOf(svars);
 	}
 
 	return dest;
@@ -444,7 +557,7 @@ function assign(dest, src, exclude = null) {
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
-function assignOwn(dest, src, exclude = null) {
+export function assignOwn(dest, src, exclude = null) {
 
 	for (let p in src ) {
 
@@ -469,7 +582,7 @@ function assignOwn(dest, src, exclude = null) {
  * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist.
  * @param {bool} [writableOnly=true] - Whether to only include writable properties / exclude read-only properties.
  */
-function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
+export function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
 	let r = {}, p, sub;
 
@@ -511,69 +624,3 @@ function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 	return r;
 
 }
-
-export {
-
-/**
- * Recursively collect all properties in an object which do not appear in
- * an original template object, or which have been changed.
- * Changed variables are collected and returned _without_ cloning.
- * NOTE: falsey values are all considered equal when determining changes.
- * NOTE: This is NOT a complete diff: props appearing in original but deleted in clone
- * are NOT listed unless they exist with new values.
- * @param {Object} clone
- * @param {Object} original
- * @returns {Object} collection of properties existing in clone, which are different from values in original.
- */
-changes,
-
-/**
- * Create a deep clone of an object. Any clone functions in source objects
- * or sub-objects are called to provide their own clone implementations.
- * @note dest is second parameter, whereas in Object.assign() it is first.
- * 		This makes syntax of: var obj = clone(src); much clearer.
- * @todo eliminate circular references.
- * @param {object} src - object to clone.
- * @param {object} [dest={}] object to merge cloned values into.
- */
-clone,
-
-/**
- * Deep clone of object, including class prototype information.
- * @param {*} src
- * @param {*} dest
- */
-cloneClass,
-
-/**
- * Return an array of all string paths from the base object
- * which lead to a non-object property in the base object or subobject.
- * Paths to arrays are also returned, but not subpaths of arrays.
- * Path strings are concatenated with '.'
- * ex. [ 'myObject.sub.prop1', 'myObject.sub.prop2' ]
- * @param {Object} base
- * @return {string[]} - array of non-object properties reachable through base.
- */
-propPaths,
-
-/**
- * Recursively merge two objects, with duplicate entries overwritten
- * by src. Arrays are concatenated without duplicating array elements.
- * @param {Object} dest
- * @param {Object} src
- */
-merge,
-
-/**
- * Recursively merge values from src into dest, without overwriting any of dest's existing values.
- * Object and array values merged from src are deep-cloned before being copied to dest.
- * Conflicting arrays are not merged.
- * Nothing is returned, as all the changes are made _within_ dest.
- * @param {Object} dest
- * @param {Object} src
- */
-mergeSafe,
-
-getProps,includesAny,randElm,getPropDesc,assign,defineExcept,jsonify,defineVars,sublists,randMatch, assignOwn
-
-};
