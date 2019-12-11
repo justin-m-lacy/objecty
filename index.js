@@ -592,7 +592,9 @@ export function jsonify(obj, excludes=null, includes=null, writableOnly = true) 
 		for( p in includes ) {
 
 			sub = obj[p];
-			if ( sub !== undefined ) r[p] = sub;
+			if ( sub === undefined ) continue;
+			else if ( typeof sub === 'object' && sub !== null && sub.toJSON ) r[p] = sub.toJSON();
+			else r[p] = sub;
 
 		}
 	}
@@ -608,7 +610,8 @@ export function jsonify(obj, excludes=null, includes=null, writableOnly = true) 
 			if (writableOnly && desc.set === undefined && !desc.writable) continue;
 
 			sub = obj[p];
-			if (typeof sub === 'function') continue;
+			if ( sub === undefined || typeof sub === 'function') continue;
+			else if ( typeof sub === 'object' && sub !== null && sub.toJSON ) r[p] = sub.toJSON();
 			else r[p] = sub;
 
 		}
