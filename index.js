@@ -473,9 +473,9 @@ export function defineVars( obj, defaultVal=null ) {
  * have all their properties defined when the template is created.
  * @param {Object} obj - Object to assign properties for.
  * @param {*} [defaultVal=null] - Value to assign to undefined properties.
- * @param {string[]} [except=[]] - Properties to ignore.
+ * @param {object.<string,*>} [except={}] - object whose keys indicate properties to ignore.
  */
-export function defineExcept( obj, defaultVal=null, except=[] ) {
+export function defineExcept( obj, defaultVal=null, except={} ) {
 
 	if ( !obj ) return;
 	let proto = obj;
@@ -484,7 +484,7 @@ export function defineExcept( obj, defaultVal=null, except=[] ) {
 
 		for ( let p of Object.getOwnPropertyNames(proto)) {
 
-			if ( except.includes(p) || obj[p] !== undefined ) continue;
+			if ( except.hasOwnProperty(p) || obj[p] !== undefined ) continue;
 			if ( Object.getOwnPropertyDescriptor(proto, p).set !== undefined ) {
 
 				obj[p] = defaultVal;
@@ -578,24 +578,21 @@ export function assignOwn(dest, src, exclude = null) {
 /**
  * Convert an object to a JSON object ready to be stringified.
  * @param {Object} obj - the objet to convert.
- * @param {string[]} [excludes=null] - Array of properties to exclude from encoding.
- * @param {string[]} [includes=null] - Array of properties to always include in encoding, if they exist.
+ * @param {object.<string,*>} [excludes=null] - object with keys to be excluded from encoding if found on the target object.
+ * @param {.<string,*>} [includes=null] - object with keys which will always be encoded if found on the target object.
  * @param {bool} [writableOnly=true] - Whether to only include writable properties / exclude read-only properties.
  */
 export function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
 	let r = {}, p, sub;
 
+	if ( excludes == null ) excludes = {};
 	if (includes) {
-		let len = includes.length;
-		for (let i = len - 1; i >= 0; i--) {
 
-			p = includes[i];
-			if ( obj.hasOwnProperty(p) ) {
-				sub = obj[p];
-				if ( typeof sub === 'object' && sub !== null && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
-				else r[p] = sub;
-			}
+		for( p in includes ) {
+
+			sub = obj[p];
+			if ( sub !== undefined ) r[p] = sub;
 
 		}
 	}
@@ -605,14 +602,13 @@ export function jsonify(obj, excludes=null, includes=null, writableOnly = true) 
 
 		for ( p of Object.getOwnPropertyNames(proto)) {
 
-			if ( excludes && excludes.includes(p) ) continue;
+			if ( excludes.hasOwnProperty(p) ) continue;
 
 			var desc = Object.getOwnPropertyDescriptor(proto, p);
 			if (writableOnly && desc.set === undefined && !desc.writable) continue;
 
 			sub = obj[p];
 			if (typeof sub === 'function') continue;
-			if ( typeof sub === 'object' && sub !== null && typeof sub.toJSON === 'function') r[p] = sub.toJSON();
 			else r[p] = sub;
 
 		}
