@@ -249,12 +249,11 @@ export function propPaths( base ) {
  * either because they are marked writable=false, or because
  * they are properties without setters.
  * @param {object} obj
- * @returns {Map.<string,true>} map of unwritable property names
- * mapping to true.
+ * @returns {Set.<string>} Set of names of unwritable properties.
  */
 export function getNoWrite( obj ) {
 
-	let m = new Map();
+	let m = new Set();
 
 	let proto = obj;
 	while ( proto !== Object.prototype ) {
@@ -263,7 +262,7 @@ export function getNoWrite( obj ) {
 		for ( let p in descs ) {
 
 			var d = descs[p];
-			if ( (d.writable !== true) && d.set === undefined )  m.set(p,true);
+			if ( (d.writable !== true) && d.set === undefined )  m.add(p);
 
 		}
 
@@ -471,22 +470,23 @@ export function defineVars( obj, defaultVal=null ) {
 /**
  * Define values for all of an Object's undefined properties with setters
  * up through its Object chain.
- * This can be useful in frameworks like Vue, where watched Objects must
+ * This is useful in frameworks like Vue, where watched Objects must
  * have all their properties defined when the template is created.
  * @param {Object} obj - Object to assign properties for.
  * @param {*} [defaultVal=null] - Value to assign to undefined properties.
- * @param {object.<string,*>} [except={}] - object whose keys indicate properties to ignore.
+ * @param {?Set.<string>} except - Set of properties to skip.
  */
-export function defineExcept( obj, defaultVal=null, except={} ) {
+export function defineExcept( obj, defaultVal=null, except=null ) {
 
 	if ( !obj ) return;
+	if ( !except) except = new Set();
 	let proto = obj;
 
 	while ( proto !== Object.prototype ) {
 
 		for ( let p of Object.getOwnPropertyNames(proto)) {
 
-			if ( except.hasOwnProperty(p) || obj[p] !== undefined ) continue;
+			if ( except.has(p) || obj[p] !== undefined ) continue;
 			if ( Object.getOwnPropertyDescriptor(proto, p).set !== undefined ) {
 
 				obj[p] = defaultVal;
@@ -532,7 +532,7 @@ export function assign(dest, src, exclude = null) {
 	var nowrite = getNoWrite(dest);
 	if ( exclude ) {
 		// mark exclusions.
-		for( let i = exclude.length-1; i >= 0; i-- ) nowrite.set(exclude[i], true);
+		for( let i = exclude.length-1; i >= 0; i-- ) nowrite.add( exclude[i] );
 	}
 
 	var svars = src;
@@ -556,14 +556,14 @@ export function assign(dest, src, exclude = null) {
  * when those values exist as properties of the destination.
  * @param {Object} dest - Destination for json data.
  * @param {Object} src - Object data to write into dest.
- * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
+ * @param {Set.<string>} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
 export function assignOwn(dest, src, exclude = null) {
 
 	for (let p in src ) {
 
-		if (exclude && exclude.includes(p)) continue;
+		if (exclude && exclude.has(p)) continue;
 		var desc = getPropDesc(dest, p );
 
 		if ( desc === null || (desc.set === undefined && !desc.writable )) continue;
