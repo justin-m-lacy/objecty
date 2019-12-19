@@ -580,18 +580,18 @@ export function assignOwn(dest, src, exclude = null) {
 /**
  * Convert an object to a JSON object ready to be stringified.
  * @param {Object} obj - the objet to convert.
- * @param {object.<string,*>} [excludes=null] - object with keys to be excluded from encoding if found on the target object.
- * @param {.<string,*>} [includes=null] - object with keys which will always be encoded if found on the target object.
+ * @param {Set.<string>} [excludes=null] - Set with properties to be excluded from encoding if found on the target object.
+ * @param {Iterable.<string>} [includes=null] - Iterable with keys to always encode. Includes take precedence over excludes.
  * @param {bool} [writableOnly=true] - Whether to only include writable properties / exclude read-only properties.
  */
 export function jsonify(obj, excludes=null, includes=null, writableOnly = true) {
 
 	let r = {}, p, sub;
 
-	if ( excludes == null ) excludes = {};
+	if ( excludes == null ) excludes = new Set();
 	if (includes) {
 
-		for( p in includes ) {
+		for( p of includes ) {
 
 			sub = obj[p];
 			if ( sub === undefined ) continue;
@@ -606,7 +606,7 @@ export function jsonify(obj, excludes=null, includes=null, writableOnly = true) 
 
 		for ( p of Object.getOwnPropertyNames(proto)) {
 
-			if ( excludes.hasOwnProperty(p) ) continue;
+			if ( excludes.has(p) ) continue;
 
 			var desc = Object.getOwnPropertyDescriptor(proto, p);
 			if (writableOnly && desc.set === undefined && !desc.writable) continue;
