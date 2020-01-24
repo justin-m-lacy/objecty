@@ -136,7 +136,8 @@ export function mergeArrays( a1, a2) {
 
 /**
  * Performs a deep-clone of an object, including class prototype
- * and class methods.
+ * and class methods. Any clone functions found in src are cloned
+ * as part of the clone procedure.
  * @param {Object} src
  * @param {?Object} [dest=null] - optional base object of the clone.
  * if set, root object will not be cloned, only subobjects.
@@ -145,8 +146,13 @@ export function cloneClass( src, dest=null ) {
 
 	let o;
 
-	let proto = Object.getPrototypeOf( src );
-	if ( !dest ) dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
+	if ( !dest ) {
+
+		if ( src.clone && typeof src.clone === 'function') return src.clone.call(src);
+
+		let proto = Object.getPrototypeOf( src );
+		dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
+	}
 
 	for( let p in src ) {
 
@@ -527,7 +533,7 @@ export function getPropDesc(obj, k) {
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
-export function assign(dest, src, exclude = null) {
+export function assignRecursive(dest, src, exclude = null ) {
 
 	var nowrite = getNoWrite(dest);
 	if ( exclude ) {
@@ -572,6 +578,31 @@ export function assignOwn(dest, src, exclude = null) {
 
 	} //for
 
+
+	return dest;
+
+}
+
+/**
+ * Non-recursive assign() that verifies assign targets are writable.
+ * @param {Object} dest - Destination object.
+ * @param {Object} src - Object data to write into dest.
+ * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
+ * @returns {Object} the destination object.
+ */
+export function assign(dest, src, exclude = null ) {
+
+	var nowrite = getNoWrite(dest);
+	if ( exclude ) {
+		// mark exclusions.
+		for( let i = exclude.length-1; i >= 0; i-- ) nowrite.add( exclude[i] );
+	}
+
+	for ( let p in src ) {
+
+		if ( nowrite.has(p) !== true ) dest[p] = src[p];
+
+	} //for
 
 	return dest;
 
