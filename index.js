@@ -598,7 +598,7 @@ export function assign(dest, src, exclude = null ) {
 		for( let i = exclude.length-1; i >= 0; i-- ) nowrite.add( exclude[i] );
 	}
 
-	for ( let p in src ) {
+	for ( let p of Object.getOwnPropertyNames(src) ) {
 
 		if ( nowrite.has(p) !== true ) dest[p] = src[p];
 
