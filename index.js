@@ -77,34 +77,45 @@ export function merge( dest, src ) {
 
 /**
  * Recursively merge values from src into dest, without overwriting any of dest's existing values.
+ * null values in dest will not be overwritten, but undefined values will be.
  * Object and array values merged from src are deep-cloned before being copied to dest.
  * Conflicting arrays are not merged.
- * Nothing is returned, as all the changes are made _within_ dest.
+ * Nothing is returned; The dest object is altered directly.
  * @param {Object} dest
  * @param {Object} src
  */
 export function mergeSafe( dest, src ) {
 
-	for( let p in src ) {
+	var nowrite = getNoWrite(dest);
 
-		var destSub = dest[p];
-		let srcSub = src[p];
+	var svars = src;
 
-		if ( destSub === undefined ) {
+	while ( svars !== Object.prototype ) {
 
-			if ( srcSub !== null && typeof srcSub === 'object' ) dest[p] = clone( srcSub, Array.isArray(srcSub) ? [] : {} );
-			else dest[p] = srcSub;
+		for( let p in svars ) {
 
-			continue;
+			if ( nowrite.has(p) ) continue;
 
-		} else if ( destSub === null ) continue;
+			var destSub = dest[p];
+			let srcSub = src[p];
 
+			if ( destSub === undefined ) {
 
-		if ( srcSub && typeof destSub === 'object' && typeof srcSub === 'object') {
+				if ( srcSub !== null && typeof srcSub === 'object' ) dest[p] = clone( srcSub, Array.isArray(srcSub) ? [] : {} );
+				else dest[p] = srcSub;
 
-			if ( !Array.isArray(destSub) && !Array.isArray(srcSub) ) mergeSafe( destSub, srcSub );
+				continue;
+
+			} else if ( destSub === null ) continue;
+
+			if ( srcSub && typeof destSub === 'object' && typeof srcSub === 'object') {
+
+				if ( !Array.isArray(destSub) && !Array.isArray(srcSub) ) mergeSafe( destSub, srcSub );
+
+			}
 
 		}
+		svars = Object.getPrototypeOf(svars);
 
 	}
 
@@ -146,7 +157,7 @@ export function cloneClass( src, dest=null ) {
 
 	let o;
 
-	if ( !dest ) {
+	if ( dest === null || dest === undefined ) {
 
 		if ( src.clone && typeof src.clone === 'function') return src.clone.call(src);
 
@@ -185,6 +196,10 @@ export function cloneClass( src, dest=null ) {
  * @param {object} [dest={}] object to merge cloned values into.
  */
 export function clone( src, dest={} ){
+
+	if ( typeof src.clone === 'function ') {
+		return src.clone();
+	}
 
 	let o, f;
 	for( let p in src ) {
@@ -526,14 +541,15 @@ export function getPropDesc(obj, k) {
 }
 
 /**
- * Copies all values from a source object into a destination object,
- * ignoring properties that are unwritable and have no setter.
+ * Behaves as objecty.assign() except it follows the src's prototype chain
+ * and continues to assign values until reaching Object.prototype.
+ * values from Object.prototype are not assigned.
  * @param {Object} dest - Destination object.
  * @param {Object} src - Object data to write into dest.
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
-export function assignRecursive(dest, src, exclude = null ) {
+export function assignChain(dest, src, exclude = null ) {
 
 	var nowrite = getNoWrite(dest);
 	if ( exclude ) {
@@ -558,14 +574,14 @@ export function assignRecursive(dest, src, exclude = null ) {
 }
 
 /**
- * Copies all values from a source object into a destination object,
- * when those values exist as properties of the destination.
+ * Copies all iterable properties from a src to a destination object, if they exist
+ * as fields or properties on the destination, and are writable.
  * @param {Object} dest - Destination for json data.
  * @param {Object} src - Object data to write into dest.
  * @param {Set.<string>} [exclude=null] - Array of properties not to copy from src to dest.
  * @returns {Object} the destination object.
  */
-export function assignOwn(dest, src, exclude = null) {
+export function assignDefined(dest, src, exclude = null) {
 
 	for (let p in src ) {
 
@@ -584,7 +600,9 @@ export function assignOwn(dest, src, exclude = null) {
 }
 
 /**
- * Non-recursive assign() that verifies assign targets are writable.
+ * Behaves like Object.assign() but does not attempt to write to non-writable properties,
+ * or properties without setters.
+ * assign() is non-recursive and only assigns a src's own properties.
  * @param {Object} dest - Destination object.
  * @param {Object} src - Object data to write into dest.
  * @param {string[]} [exclude=null] - Array of properties not to copy from src to dest.
