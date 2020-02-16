@@ -147,8 +147,57 @@ export function mergeArrays( a1, a2) {
 
 /**
  * Performs a deep-clone of an object, including class prototype
- * and class methods. Any clone functions found in src are cloned
- * as part of the clone procedure.
+ * and class methods. The entire prototype chain up to the Object prototype
+ * is searched for properties to clone.
+ * @param {Object} src
+ * @param {?Object} [dest=null] - optional base object of the clone.
+ * if set, root object will not be cloned, only subobjects.
+ */
+export function cloneChain( src, dest=null ) {
+
+	let o, proto;
+
+	if ( dest === null || dest === undefined ) {
+
+		if ( src.clone && typeof src.clone === 'function') return src.clone.call(src);
+
+		proto = Object.getPrototypeOf( src );
+		dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
+	}
+
+	let proto = src;
+	while ( proto !== Object.prototype ) {
+
+		for( let p in proto ) {
+
+			o = src[p];
+
+			var def = getPropDesc( dest, p );
+			if ( def && ( !def.writable || def.set === undefined ) ) continue;
+
+			if ( o === null || o === undefined ) dest[p] = o;
+			else if ( typeof o === 'object' ) {
+
+				if ( o.clone && typeof o.clone === 'function' ) dest[p] = o.clone.call( o );
+				else dest[p] = cloneChain( o );
+
+			} else dest[p] = o;
+
+		}
+
+		proto = Object.getPrototypeOf(proto);
+
+	}
+
+	return dest;
+
+}
+
+
+/**
+ * Performs a deep-clone of an object's own properties and methods.
+ * Whenever a clone() function is present on an object, it is called
+ * to provide its own clone.
  * @param {Object} src
  * @param {?Object} [dest=null] - optional base object of the clone.
  * if set, root object will not be cloned, only subobjects.
