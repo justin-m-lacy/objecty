@@ -165,7 +165,7 @@ export function cloneChain( src, dest=null ) {
 		dest = Array.isArray(src) ? [] : ( proto ? Object.create( proto ) : {} );
 	}
 
-	let proto = src;
+	proto = src;
 	while ( proto !== Object.prototype ) {
 
 		for( let p in proto ) {
