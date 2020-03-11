@@ -53,11 +53,16 @@ export function changes( clone, original ) {
  */
 export function merge( dest, src ) {
 
+	var nowrite = getNoWrite(dest);
+
 	for( let p in src ) {
+
+		if ( nowrite.has(p) ) continue;
 
 		var srcSub = src[p];
 
-		if ( ( typeof srcSub !== 'object' && typeof srcSub !== 'function') ) {
+		if ( ( typeof srcSub !== 'object' && typeof srcSub !== 'function')
+		|| dest[p] === null || dest[p] === undefined ) {
 			dest[p] = srcSub;
 			continue;
 		}
@@ -65,7 +70,7 @@ export function merge( dest, src ) {
 		var destSub = dest[p];
 		if (  Array.isArray(destSub) ) {
 
-			if ( Array.isArray(srcSub) ) dest[p] = mergeArrays( destSub, srcSub );
+			if ( Array.isArray(srcSub) ) merge( destSub, srcSub );
 			else if ( !destSub.includes(srcSub) ) destSub.push(srcSub);
 
 		} else if ( typeof destSub === 'object') merge( destSub, srcSub );
@@ -83,10 +88,14 @@ export function merge( dest, src ) {
  * Nothing is returned; The dest object is altered directly.
  * @param {Object} dest
  * @param {Object} src
+ * @param {?Iterable<string>} [exclude=null] iterable of properties to exclude.
  */
-export function mergeSafe( dest, src ) {
+export function mergeSafe( dest, src, exclude=null) {
 
 	var nowrite = getNoWrite(dest);
+	if ( exclude ) {
+		for( let p of exclude ) nowrite.add(p);
+	}
 
 	var svars = src;
 
@@ -173,7 +182,7 @@ export function cloneChain( src, dest=null ) {
 			o = src[p];
 
 			var def = getPropDesc( dest, p );
-			if ( def && ( !def.writable || def.set === undefined ) ) continue;
+			if ( def && ( !def.writable && def.set === undefined ) ) continue;
 
 			if ( o === null || o === undefined ) dest[p] = o;
 			else if ( typeof o === 'object' ) {
@@ -219,7 +228,9 @@ export function cloneClass( src, dest=null ) {
 		o = src[p];
 
 		var def = getPropDesc( dest, p );
-		if ( def && ( !def.writable || def.set === undefined ) ) continue;
+		if ( def && ( !def.writable && def.set === undefined ) ) {
+			continue;
+		}
 
 		if ( o === null || o === undefined ) dest[p] = o;
 		else if ( typeof o === 'object' ) {
@@ -351,6 +362,7 @@ export function getNoWrite( obj ) {
  * map to property descriptors.
  * @param {object} obj
  * @param {Map}
+ * @returns {Map<string,PropertyDescriptor>}
  */
 export function getDescs( obj ) {
 
@@ -544,19 +556,19 @@ export function defineVars( obj, defaultVal=null ) {
  * have all their properties defined when the template is created.
  * @param {Object} obj - Object to assign properties for.
  * @param {*} [defaultVal=null] - Value to assign to undefined properties.
- * @param {?Set.<string>} except - Set of properties to skip.
+ * @param {?Set.<string>} exclude - Set of properties to skip.
  */
-export function defineExcept( obj, defaultVal=null, except=null ) {
+export function defineExcept( obj, defaultVal=null, exclude=null ) {
 
 	if ( !obj ) return;
-	if ( !except) except = new Set();
+	if ( !exclude) exclude = new Set();
 	let proto = obj;
 
 	while ( proto !== Object.prototype ) {
 
 		for ( let p of Object.getOwnPropertyNames(proto)) {
 
-			if ( except.has(p) || obj[p] !== undefined ) continue;
+			if ( exclude.has(p) || obj[p] !== undefined ) continue;
 			if ( Object.getOwnPropertyDescriptor(proto, p).set !== undefined ) {
 
 				obj[p] = defaultVal;
