@@ -1,12 +1,12 @@
 {
   "name": "objecty",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Object utils including deep clones, assign, property enumeration, prototype property enumeration, json conversion, deep reference, etc.",
   "main": "index.js",
-  "scripts":{
+  "scripts": {
     "test": "node test.js"
   },
-  "repository":{
+  "repository": {
     "type": "git",
     "url": "https://github.com/lerpinglemur/objecty.git"
   },
