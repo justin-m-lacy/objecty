@@ -1,4 +1,12 @@
 /**
+ * @const {Set} EmptySet - Empty set to use as a default set
+ * for functions with a Set argument, but no Set was provided
+ * by the user.
+ * More efficient then recreating Sets every time.
+ */
+const EmptySet = new Set();
+
+/**
  * Recursively collect all properties in an object which do not appear in
  * an original template object, or which have been changed.
  * Changed variables are collected and returned _without_ cloning.
@@ -46,20 +54,20 @@ export function changes( clone, original ) {
 }
 
 /**
- * Recursively merge two objects, with duplicate entries overwritten
- * by src. Arrays are concatenated without duplicating array elements.
- * @param {Object} dest
- * @param {Object} src
+ * Recursively merge two objects, with properties in dest overwritten by properties in source.
+ * Arrays are concatenated without duplicating array elements.
+ * @param {Object} dest - destination object.
+ * @param {Object} src - source object.
  */
 export function merge( dest, src ) {
 
-	var nowrite = getNoWrite(dest);
+	let nowrite = getNoWrite(dest);
 
 	for( let p in src ) {
 
 		if ( nowrite.has(p) ) continue;
 
-		var srcSub = src[p];
+		let srcSub = src[p];
 
 		if ( ( typeof srcSub !== 'object' && typeof srcSub !== 'function')
 		|| dest[p] === null || dest[p] === undefined ) {
@@ -67,7 +75,7 @@ export function merge( dest, src ) {
 			continue;
 		}
 
-		var destSub = dest[p];
+		let destSub = dest[p];
 		if (  Array.isArray(destSub) ) {
 
 			if ( Array.isArray(srcSub) ) merge( destSub, srcSub );
@@ -325,16 +333,18 @@ export function propPaths( base ) {
 }
 
 /**
- * Returns a Map of all properties in an object's prototype chain,
+ * Return a Set of all properties in an object's prototype chain,
  * not including Object.prototype, which cannot be assigned to,
  * either because they are marked writable=false, or because
  * they are properties without setters.
  * @param {object} obj
+ * @param {Iterable<string>} [includes=null] - Additional property names to include
+ * in the nonwritable Set result.
  * @returns {Set.<string>} Set of names of unwritable properties.
  */
-export function getNoWrite( obj ) {
+export function getNoWrite( obj, includes=null ) {
 
-	let m = new Set();
+	let m = new Set( includes );
 
 	let proto = obj;
 	while ( proto !== Object.prototype ) {
@@ -561,7 +571,7 @@ export function defineVars( obj, defaultVal=null ) {
 export function defineExcept( obj, defaultVal=null, exclude=null ) {
 
 	if ( !obj ) return;
-	if ( !exclude) exclude = new Set();
+	if ( !exclude) exclude = EmptySet;
 	let proto = obj;
 
 	while ( proto !== Object.prototype ) {
@@ -612,13 +622,9 @@ export function getPropDesc(obj, k) {
  */
 export function assignChain(dest, src, exclude = null ) {
 
-	var nowrite = getNoWrite(dest);
-	if ( exclude ) {
-		// mark exclusions.
-		for( let i = exclude.length-1; i >= 0; i-- ) nowrite.add( exclude[i] );
-	}
+	let nowrite = getNoWrite(dest, exclude );
 
-	var svars = src;
+	let svars = src;
 	while ( svars !== Object.prototype ) {
 
 		for (let p of Object.getOwnPropertyNames(svars) ) {
@@ -671,11 +677,7 @@ export function assignDefined(dest, src, exclude = null) {
  */
 export function assign(dest, src, exclude = null ) {
 
-	var nowrite = getNoWrite(dest);
-	if ( exclude ) {
-		// mark exclusions.
-		for( let i = exclude.length-1; i >= 0; i-- ) nowrite.add( exclude[i] );
-	}
+	let nowrite = getNoWrite(dest, exclude );
 
 	for ( let p of Object.getOwnPropertyNames(src) ) {
 
@@ -698,7 +700,7 @@ export function jsonify(obj, excludes=null, includes=null, writableOnly = true) 
 
 	let r = {}, p, sub;
 
-	if ( excludes == null ) excludes = new Set();
+	if ( excludes == null ) excludes = EmptySet;
 	if (includes) {
 
 		for( p of includes ) {
@@ -711,7 +713,7 @@ export function jsonify(obj, excludes=null, includes=null, writableOnly = true) 
 		}
 	}
 
-	var proto = Object.getPrototypeOf(obj);
+	let proto = Object.getPrototypeOf(obj);
 	while (proto != Object.prototype) {
 
 		for ( p of Object.getOwnPropertyNames(proto)) {
