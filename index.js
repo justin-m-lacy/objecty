@@ -543,7 +543,7 @@ export function defineVars( obj, defaultVal=null ) {
 
 	while ( proto !== Object.prototype ) {
 
-		for ( p of Object.getOwnPropertyNames(proto)) {
+		for ( let p of Object.getOwnPropertyNames(proto)) {
 
 			if ( obj[p] !== undefined ) continue;
 			if ( Object.getOwnPropertyDescriptor(proto, p).set !== undefined ) {
