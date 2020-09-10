@@ -215,6 +215,8 @@ export function cloneChain( src, dest=null ) {
  * Performs a deep-clone of an object's own properties and methods.
  * Whenever a clone() function is present on an object, it is called
  * to provide its own clone.
+ * NOTE: objects with clone functions that call cloneClass() can cause infinite loops
+ * if a dest object is not used.
  * @param {Object} src
  * @param {?Object} [dest=null] - optional base object of the clone.
  * if set, root object will not be cloned, only subobjects.
@@ -589,6 +591,22 @@ export function defineExcept( obj, defaultVal=null, exclude=null ) {
 		proto = Object.getPrototypeOf( proto );
 
 	} // while-loop.
+
+}
+
+/**
+ * Ensure the existence of the given properties on an object.
+ * Useful for Vue reactivity.
+ * @property {Object} obj
+ * @property {string[]} props - props to set.
+ * @property {*} [defaultVal=null] - default value to use.
+ */
+export const ensure = ( obj, props, defaultVal=null ) => {
+
+	for( let i = props.length-1; i>= 0; i-- ) {
+		let s = props[i];
+		if ( !obj.hasOwnProperty(s) ) obj[s] = defaultVal;
+	}
 
 }
 
