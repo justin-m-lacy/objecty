@@ -755,3 +755,22 @@ export function jsonify(obj, excludes=null, includes=null, writableOnly = true) 
 	return r;
 
 }
+
+/**
+ * Recursively freeze an object and all descendents.
+ * @param {object} obj
+ */
+export function freeze( obj ) {
+
+	let sub;
+	for( let p in obj ){
+
+		sub = obj[p];
+		if ( typeof sub === 'object' && sub !== null && !Object.isFrozen(sub) ) freeze(sub);
+		else Object.freeze( sub );
+
+	}
+
+	return Object.freeze( obj );
+
+}
